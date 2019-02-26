@@ -4,36 +4,43 @@ using System.Numerics;
 
 namespace VirtualCamera
 {
-    struct Face
+    struct Triangle
     {
-        public Vector3[] Points;
+        public Vector4[] Vertices;
     }
 
     struct Mesh
     {
-        public List<Face> Tris;
+        public List<Triangle> Triangles;
     }
 
     class WorldData
     {
         public Mesh mesh;
+        private List<Vector4> vertices;
 
         public WorldData()
         {
-            using (StreamReader sr = new StreamReader("WorldPoints.txt"))
+            using (StreamReader sr = new StreamReader(@"C:\Users\Admin\Documents\cube.obj"))
             {
                 string line;
-                mesh = new Mesh { Tris = new List<Face>() };
+                vertices = new List<Vector4>();
+                mesh = new Mesh { Triangles = new List<Triangle>() };
                 while ((line = sr.ReadLine()) != null)
                 {
-                    if (line[0] != '#')
+                    string[] points = line.Split(' ');
+                    switch (line[0])
                     {
-                        string[] points = line.Split(' ');
-                        Face face = new Face { Points = new Vector3[3] };
-                        face.Points[0] = new Vector3(float.Parse(points[0]), float.Parse(points[1]), float.Parse(points[2]));
-                        face.Points[1] = new Vector3(float.Parse(points[3]), float.Parse(points[4]), float.Parse(points[5]));
-                        face.Points[2] = new Vector3(float.Parse(points[6]), float.Parse(points[7]), float.Parse(points[8]));
-                        mesh.Tris.Add(face);
+                        case 'v':
+                            vertices.Add(new Vector4(float.Parse(points[1]), float.Parse(points[2]), float.Parse(points[3]), 1.0F));
+                            break;
+                        case 'f':
+                            Triangle face = new Triangle { Vertices = new Vector4[3] };
+                            face.Vertices[0] = vertices[int.Parse(points[1]) - 1];
+                            face.Vertices[1] = vertices[int.Parse(points[2]) - 1];
+                            face.Vertices[2] = vertices[int.Parse(points[3]) - 1];
+                            mesh.Triangles.Add(face);
+                            break;
                     }
                 }
             }
