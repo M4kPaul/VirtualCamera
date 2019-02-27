@@ -78,7 +78,7 @@ namespace VirtualCamera
                 M43 = (-far * near) / (far - near),
                 M34 = 1.0F
             };
-            
+
             var up = new Vector3(0, 1, 0);
             var target = new Vector3(0, 0, 1);
             var cameraRotMat = Matrix4x4.Multiply(Matrix4x4.Multiply(Transformations.RotateX(pitch), Transformations.RotateY(yaw)), Transformations.RotateZ(roll));
@@ -91,30 +91,30 @@ namespace VirtualCamera
             var projMesh = new Mesh { Triangles = new List<Triangle>() };
             foreach (var triangle in worldData.mesh.Triangles)
             {
-                var transformedTriangle = new Triangle { Vertices = new Vector4[3] };
-                transformedTriangle.Vertices[0] = Transformations.MultiplyMatVect(worldTransMat, triangle.Vertices[0]);
-                transformedTriangle.Vertices[1] = Transformations.MultiplyMatVect(worldTransMat, triangle.Vertices[1]);
-                transformedTriangle.Vertices[2] = Transformations.MultiplyMatVect(worldTransMat, triangle.Vertices[2]);
+                var transformedTri = new Triangle { Vertices = new Vector4[3] };
+                transformedTri.Vertices[0] = Transformations.MultiplyMatVect(worldTransMat, triangle.Vertices[0]);
+                transformedTri.Vertices[1] = Transformations.MultiplyMatVect(worldTransMat, triangle.Vertices[1]);
+                transformedTri.Vertices[2] = Transformations.MultiplyMatVect(worldTransMat, triangle.Vertices[2]);
 
                 if (isSolid)
                 {
-                    Vector3 point0 = Transformations.V4ToV3(transformedTriangle.Vertices[0]);
-                    Vector3 line1 = Vector3.Subtract(Transformations.V4ToV3(transformedTriangle.Vertices[1]), point0);
-                    Vector3 line2 = Vector3.Subtract(Transformations.V4ToV3(transformedTriangle.Vertices[2]), point0);
+                    Vector3 point0 = Transformations.V4ToV3(transformedTri.Vertices[0]);
+                    Vector3 line1 = Vector3.Subtract(Transformations.V4ToV3(transformedTri.Vertices[1]), point0);
+                    Vector3 line2 = Vector3.Subtract(Transformations.V4ToV3(transformedTri.Vertices[2]), point0);
                     Vector3 normal = Vector3.Normalize(Vector3.Cross(line1, line2));
 
                     if (Vector3.Dot(normal, Vector3.Subtract(point0, camera)) >= 0.0F) continue;
                 }
 
-                var viewedTriangle = new Triangle { Vertices = new Vector4[3] };
-                viewedTriangle.Vertices[0] = Transformations.MultiplyMatVect(viewMat, transformedTriangle.Vertices[0]);
-                viewedTriangle.Vertices[1] = Transformations.MultiplyMatVect(viewMat, transformedTriangle.Vertices[1]);
-                viewedTriangle.Vertices[2] = Transformations.MultiplyMatVect(viewMat, transformedTriangle.Vertices[2]);
+                var viewedTri = new Triangle { Vertices = new Vector4[3] };
+                viewedTri.Vertices[0] = Transformations.MultiplyMatVect(viewMat, transformedTri.Vertices[0]);
+                viewedTri.Vertices[1] = Transformations.MultiplyMatVect(viewMat, transformedTri.Vertices[1]);
+                viewedTri.Vertices[2] = Transformations.MultiplyMatVect(viewMat, transformedTri.Vertices[2]);
 
                 var projTri = new Triangle { Vertices = new Vector4[3] };
-                projTri.Vertices[0] = Transformations.MultiplyMatVect(projMat, viewedTriangle.Vertices[0]);
-                projTri.Vertices[1] = Transformations.MultiplyMatVect(projMat, viewedTriangle.Vertices[1]);
-                projTri.Vertices[2] = Transformations.MultiplyMatVect(projMat, viewedTriangle.Vertices[2]);
+                projTri.Vertices[0] = Transformations.MultiplyMatVect(projMat, viewedTri.Vertices[0]);
+                projTri.Vertices[1] = Transformations.MultiplyMatVect(projMat, viewedTri.Vertices[1]);
+                projTri.Vertices[2] = Transformations.MultiplyMatVect(projMat, viewedTri.Vertices[2]);
 
                 projTri.Vertices[0] = Vector4.Divide(projTri.Vertices[0], projTri.Vertices[0].W);
                 projTri.Vertices[1] = Vector4.Divide(projTri.Vertices[1], projTri.Vertices[1].W);
@@ -138,22 +138,26 @@ namespace VirtualCamera
             projMesh.Triangles.Sort(Transformations.CompareTriangles);
             var pen = new Pen(Color.White, 1);
             var brush = new SolidBrush(Color.Gray);
-            foreach (var projTriangle in projMesh.Triangles)
+            foreach (var projTri in projMesh.Triangles)
             {
                 PointF[] projPoints =
                 {
-                   new PointF(projTriangle.Vertices[0].X, projTriangle.Vertices[0].Y),
-                   new PointF(projTriangle.Vertices[1].X, projTriangle.Vertices[1].Y),
-                   new PointF(projTriangle.Vertices[2].X, projTriangle.Vertices[2].Y)
+                   new PointF(projTri.Vertices[0].X, projTri.Vertices[0].Y),
+                   new PointF(projTri.Vertices[1].X, projTri.Vertices[1].Y),
+                   new PointF(projTri.Vertices[2].X, projTri.Vertices[2].Y)
                 };
-                //graphics.DrawLine(pen, new PointF(projTriangle.Vertices[0].X, projTriangle.Vertices[0].Y), new PointF(projTriangle.Vertices[1].X, projTriangle.Vertices[1].Y));
-                //graphics.DrawLine(pen, new PointF(projTriangle.Vertices[0].X, projTriangle.Vertices[0].Y), new PointF(projTriangle.Vertices[2].X, projTriangle.Vertices[2].Y));
-                //graphics.DrawLine(pen, new PointF(projTriangle.Vertices[1].X, projTriangle.Vertices[1].Y), new PointF(projTriangle.Vertices[2].X, projTriangle.Vertices[2].Y));
-                graphics.DrawPolygon(pen, projPoints);
-                if (isSolid)
+                //graphics.DrawLine(pen, new PointF(projTri.Vertices[0].X, projTri.Vertices[0].Y), new PointF(projTri.Vertices[1].X, projTri.Vertices[1].Y));
+                //graphics.DrawLine(pen, new PointF(projTri.Vertices[0].X, projTri.Vertices[0].Y), new PointF(projTri.Vertices[2].X, projTri.Vertices[2].Y));
+                //graphics.DrawLine(pen, new PointF(projTri.Vertices[1].X, projTri.Vertices[1].Y), new PointF(projTri.Vertices[2].X, projTri.Vertices[2].Y));
+                try
                 {
-                    graphics.FillPolygon(brush, projPoints);
+                    graphics.DrawPolygon(pen, projPoints);
+                    if (isSolid)
+                    {
+                        graphics.FillPolygon(brush, projPoints);
+                    }
                 }
+                catch { }
             }
         }
     }
