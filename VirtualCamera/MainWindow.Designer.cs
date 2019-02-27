@@ -47,6 +47,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.Canvas);
+            this.DoubleBuffered = true;
             this.Name = "MainWindow";
             this.ShowIcon = false;
             this.Text = "Virtual Camera";

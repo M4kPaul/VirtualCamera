@@ -18,6 +18,22 @@ namespace VirtualCamera
             return res;
         }
 
+        public static Matrix4x4 Translate(float x, float y, float z)
+        {
+            Matrix4x4 res = new Matrix4x4
+            {
+                M11 = 1.0F,
+                M22 = 1.0F,
+                M33 = 1.0F,
+                M41 = x,
+                M42 = y,
+                M43 = z,
+                M44 = 1.0F,
+            };
+
+            return res;
+        }
+
         public static Matrix4x4 RotateX(float radAngle)
         {
             Matrix4x4 res = new Matrix4x4
@@ -63,18 +79,52 @@ namespace VirtualCamera
             return res;
         }
 
-        public static Matrix4x4 Translate(float x, float y, float z)
+        public static int CompareTriangles(Triangle t1, Triangle t2)
         {
-            Matrix4x4 res = new Matrix4x4
+            float z1 = (t1.Vertices[0].Z + t1.Vertices[1].Z + t1.Vertices[2].Z) / 3.0F;
+            float z2 = (t2.Vertices[0].Z + t2.Vertices[1].Z + t2.Vertices[2].Z) / 3.0F;
+            return z2.CompareTo(z1);
+        }
+
+        public static Vector3 V4ToV3(Vector4 v)
+        {
+            Vector3 res = new Vector3
             {
-                M11 = 1.0F,
-                M22 = 1.0F,
-                M33 = 1.0F,
-                M41 = x,
-                M42 = y,
-                M43 = z,
-                M44 = 1.0F,
+                X = v.X,
+                Y = v.Y,
+                Z = v.Z
             };
+
+            return res;
+        }
+
+        public static Matrix4x4 PointAt(Vector3 pos, Vector3 target, Vector3 up)
+        {
+            Vector3 newForward = Vector3.Normalize(Vector3.Subtract(target, pos));
+            Vector3 newUp = Vector3.Normalize(Vector3.Subtract(up, Vector3.Multiply(newForward, Vector3.Dot(up, newForward))));
+            Vector3 newRight = Vector3.Cross(newUp, newForward);
+
+            Matrix4x4 res = new Matrix4x4(
+                      newRight.X,   newRight.Y,   newRight.Z, 0.0F,
+                         newUp.X,      newUp.Y,      newUp.Z, 0.0F,
+                    newForward.X, newForward.Y, newForward.Z, 0.0F,
+                           pos.X,        pos.Y,        pos.Z, 1.0F
+                );
+
+            return res;
+        }
+        
+        public static Matrix4x4 QuickInverse(Matrix4x4 m) // trans/rot only!
+        {
+            Matrix4x4 res = new Matrix4x4(
+                    m.M11, m.M21, m.M31, 0.0F,
+                    m.M12, m.M22, m.M32, 0.0F,
+                    m.M13, m.M23, m.M33, 0.0F,
+                    -(m.M41 * m.M11 + m.M42 * m.M21 + m.M43 * m.M31),
+                    -(m.M41 * m.M12 + m.M42 * m.M22 + m.M43 * m.M32),
+                    -(m.M41 * m.M13 + m.M42 * m.M23 + m.M43 * m.M33),
+                    1.0F
+                );
 
             return res;
         }
