@@ -79,10 +79,10 @@ namespace VirtualCamera
             return res;
         }
 
-        public static int CompareTriangles(Triangle t1, Triangle t2)
+        public static int CompareTriangles(Vector4[] t1, Vector4[] t2)
         {
-            float z1 = (t1.Vertices[0].Z + t1.Vertices[1].Z + t1.Vertices[2].Z) / 3.0F;
-            float z2 = (t2.Vertices[0].Z + t2.Vertices[1].Z + t2.Vertices[2].Z) / 3.0F;
+            float z1 = (t1[0].Z + t1[1].Z + t1[2].Z) / 3.0F;
+            float z2 = (t2[0].Z + t2[1].Z + t2[2].Z) / 3.0F;
             return z2.CompareTo(z1);
         }
 

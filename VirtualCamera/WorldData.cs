@@ -4,28 +4,16 @@ using System.Numerics;
 
 namespace VirtualCamera
 {
-    struct Triangle
-    {
-        public Vector4[] Vertices;
-    }
-
-    struct Mesh
-    {
-        public List<Triangle> Triangles;
-    }
-
     class WorldData
     {
-        public Mesh mesh;
-        private List<Vector4> vertices;
+        public List<Vector4[]> Mesh { get; } = new List<Vector4[]>();
 
         public WorldData()
         {
             using (StreamReader sr = new StreamReader(@"3dModels\world.obj"))
             {
                 string line;
-                vertices = new List<Vector4>();
-                mesh = new Mesh { Triangles = new List<Triangle>() };
+                var vertices = new List<Vector4>();
                 while ((line = sr.ReadLine()) != null)
                 {
                     if (line.Length > 0)
@@ -37,11 +25,11 @@ namespace VirtualCamera
                                 vertices.Add(new Vector4(float.Parse(points[1]), float.Parse(points[2]), float.Parse(points[3]), 1.0F));
                                 break;
                             case 'f':
-                                Triangle face = new Triangle { Vertices = new Vector4[3] };
-                                face.Vertices[0] = vertices[int.Parse(points[1]) - 1];
-                                face.Vertices[1] = vertices[int.Parse(points[2]) - 1];
-                                face.Vertices[2] = vertices[int.Parse(points[3]) - 1];
-                                mesh.Triangles.Add(face);
+                                var face = new Vector4[3];
+                                face[0] = vertices[int.Parse(points[1]) - 1];
+                                face[1] = vertices[int.Parse(points[2]) - 1];
+                                face[2] = vertices[int.Parse(points[3]) - 1];
+                                Mesh.Add(face);
                                 break;
                         }
                     }
