@@ -83,7 +83,7 @@ namespace VirtualCamera
             //var rotZMat = Transformations.RotateZ(roll);
             var rotYXMat = Matrix4x4.Multiply(rotYMat, rotXMat);
             var worldTransMat = Transformations.Translate(camera.X, camera.Y - 5.0F, camera.Z + 15.0F);
-            worldTransMat = Matrix4x4.Multiply(rotYXMat, worldTransMat);
+            worldTransMat = Matrix4x4.Multiply(worldTransMat, rotYXMat);
             var projMesh = new List<Vector4[]>();
             foreach (var triangle in worldData.Mesh)
             {
