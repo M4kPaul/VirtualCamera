@@ -32,7 +32,7 @@ namespace VirtualCamera
             pitch = 0.0F;
             yaw = 0.0F;
             roll = 0.0F;
-            camera = new Vector3(0.0F, 0.0F, 0.0F);
+            camera = new Vector3(0.0F, 5.0F, -15.0F);
             isSolid = false;
         }
 
@@ -99,28 +99,22 @@ namespace VirtualCamera
             var viewMat = Transformations.LookAt(camera, at, up) * rotZMat;
 
             var projMesh = new List<Vector4[]>();
-            var worldTransMat = Transformations.Translate(0.0F, -5.0F, 15.0F);
             foreach (var triangle in worldData.Mesh)
             {
-                var transTri = new Vector4[3];
-                transTri[0] = Vector4.Transform(triangle[0], worldTransMat);
-                transTri[1] = Vector4.Transform(triangle[1], worldTransMat);
-                transTri[2] = Vector4.Transform(triangle[2], worldTransMat);
-
                 if (isSolid)
                 {
-                    Vector3 point0 = Transformations.V4ToV3(transTri[0]);
-                    Vector3 line1 = Transformations.V4ToV3(transTri[1]) - point0;
-                    Vector3 line2 = Transformations.V4ToV3(transTri[2]) - point0;
+                    Vector3 point0 = Transformations.V4ToV3(triangle[0]);
+                    Vector3 line1 = Transformations.V4ToV3(triangle[1]) - point0;
+                    Vector3 line2 = Transformations.V4ToV3(triangle[2]) - point0;
                     Vector3 normal = Vector3.Normalize(Vector3.Cross(line1, line2));
 
                     if (Vector3.Dot(normal, point0 - camera) >= 0.0F) continue;
                 }
 
                 var viewTri = new Vector4[3];
-                viewTri[0] = Vector4.Transform(transTri[0], viewMat);
-                viewTri[1] = Vector4.Transform(transTri[1], viewMat);
-                viewTri[2] = Vector4.Transform(transTri[2], viewMat);
+                viewTri[0] = Vector4.Transform(triangle[0], viewMat);
+                viewTri[1] = Vector4.Transform(triangle[1], viewMat);
+                viewTri[2] = Vector4.Transform(triangle[2], viewMat);
 
                 var projTri = new Vector4[3];
                 projTri[0] = Vector4.Transform(viewTri[0], projMat);
