@@ -82,13 +82,6 @@ namespace VirtualCamera
             return res;
         }
 
-        public static int CompareTriangles(Vector4[] t1, Vector4[] t2)
-        {
-            float z1 = (t1[0].Z + t1[1].Z + t1[2].Z) / 3.0F;
-            float z2 = (t2[0].Z + t2[1].Z + t2[2].Z) / 3.0F;
-            return z2.CompareTo(z1);
-        }
-
         public static Vector3 V4ToV3(Vector4 v)
         {
             Vector3 res = new Vector3
@@ -99,6 +92,22 @@ namespace VirtualCamera
             };
 
             return res;
+        }
+
+        public static Vector3 CalculateSurfaceNormal(Polygon polygon)
+        {
+            var normal = new Vector3(0, 0, 0);
+
+            for (int i = 0; i < polygon.vertices.Length; i++)
+            {
+                var current = polygon.vertices[i];
+                var next = polygon.vertices[(i + 1) % polygon.vertices.Length]; 
+                normal.X += (current.Y - next.Y) * (current.Z + next.Z);
+                normal.Y += (current.Z - next.Z) * (current.X + next.X);
+                normal.Z += (current.X - next.X) * (current.Y + next.Y);
+            }
+
+            return Vector3.Normalize(normal);
         }
     }
 }

@@ -8,7 +8,9 @@ namespace VirtualCamera
 {
     public partial class MainWindow : Form
     {
-        private WorldData worldData;
+        Graphics graphics;
+        private readonly WorldData worldData;
+        private List<Polygon> projPolygons;
         private float fov;
         private float pitch;
         private float yaw;
@@ -32,7 +34,7 @@ namespace VirtualCamera
             pitch = 0.0F;
             yaw = 0.0F;
             roll = 0.0F;
-            camera = new Vector3(0.0F, 5.0F, -15.0F);
+            camera = new Vector3(0.0F, 0.0F, 0.0F);
             isSolid = false;
         }
 
@@ -71,13 +73,13 @@ namespace VirtualCamera
 
         private void Canvas_Paint(object sender, PaintEventArgs e)
         {
-            var graphics = Canvas.CreateGraphics();
+            graphics = Canvas.CreateGraphics();
             graphics.Clear(Color.Black);
 
             var fovRad = 1.0F / (float)Math.Tan(fov * 0.5F / 180.0F * Math.PI);
             var aspectRatio = Canvas.Height / (float)Canvas.Width;
-            var near = 0.0F;
-            var far = 1.0F;
+            var near = 0.1F;
+            var far = 1000.0F;
             var projMat = new Matrix4x4
             {
                 M11 = fovRad * aspectRatio,
@@ -88,7 +90,7 @@ namespace VirtualCamera
             };
 
             var up = new Vector3(0.0F, 1.0F, 0.0F);
-            var at = new Vector3(0.0F, 0.0F, 1.0F);
+            var at = new Vector3(0.0F, 0.0F, -1.0F);
             var rotXMat = Transformations.RotateX(pitch / 180.0F * (float)Math.PI);
             var rotYMat = Transformations.RotateY(yaw / 180.0F * (float)Math.PI);
             var rotZMat = Transformations.RotateZ(roll / 180.0F * (float)Math.PI);
@@ -98,69 +100,65 @@ namespace VirtualCamera
             at = camera + lookDir;
             var viewMat = Transformations.LookAt(camera, at, up) * rotZMat;
 
-            var projMesh = new List<Vector4[]>();
-            foreach (var triangle in worldData.Mesh)
+            projPolygons = new List<Polygon>();
+            foreach (var poly in worldData.Polygons)
             {
-                if (isSolid)
+                bool isClipped = false;
+                var viewedPoly = new Vector4();
+                var projPoly = new Polygon { ID = poly.ID, vertices = new Vector4[poly.vertices.Length] };
+                for (int i = 0; i <  poly.vertices.Length; i++)
                 {
-                    Vector3 point0 = Transformations.V4ToV3(triangle[0]);
-                    Vector3 line1 = Transformations.V4ToV3(triangle[1]) - point0;
-                    Vector3 line2 = Transformations.V4ToV3(triangle[2]) - point0;
-                    Vector3 normal = Vector3.Normalize(Vector3.Cross(line1, line2));
+                    viewedPoly = Vector4.Transform(poly.vertices[i], viewMat);
+                    projPoly.vertices[i] = Vector4.Transform(viewedPoly, projMat);
 
-                    if (Vector3.Dot(normal, point0 - camera) >= 0.0F) continue;
+                    // TODO: fix clipping
+                    if (projPoly.vertices[i].X < -projPoly.vertices[i].W || projPoly.vertices[i].X > projPoly.vertices[i].W ||
+                        projPoly.vertices[i].Y < -projPoly.vertices[i].W || projPoly.vertices[i].Y > projPoly.vertices[i].W ||
+                        projPoly.vertices[i].Z < 0 || projPoly.vertices[i].Z > projPoly.vertices[i].W) isClipped = true;
+
+                    projPoly.vertices[i] /= projPoly.vertices[i].W;
+                    projPoly.vertices[i].X *= -1.0F; projPoly.vertices[i].Y *= -1.0F;
+                    projPoly.vertices[i] += new Vector4(1.0F, 1.0F, 0, 0);
+                    projPoly.vertices[i].X *= 0.5f * Canvas.Width; projPoly.vertices[i].Y *= 0.5f * Canvas.Height;
                 }
 
-                var viewTri = new Vector4[3];
-                viewTri[0] = Vector4.Transform(triangle[0], viewMat);
-                viewTri[1] = Vector4.Transform(triangle[1], viewMat);
-                viewTri[2] = Vector4.Transform(triangle[2], viewMat);
-
-                var projTri = new Vector4[3];
-                projTri[0] = Vector4.Transform(viewTri[0], projMat);
-                projTri[1] = Vector4.Transform(viewTri[1], projMat);
-                projTri[2] = Vector4.Transform(viewTri[2], projMat);
-
-                if (projTri[0].X < -projTri[0].W || projTri[0].X > projTri[0].W ||
-                    projTri[0].Y < -projTri[0].W || projTri[0].Y > projTri[0].W ||
-                    projTri[0].Z < 0 || projTri[0].Z > projTri[0].W ||
-                    projTri[1].X < -projTri[1].W || projTri[1].X > projTri[1].W ||
-                    projTri[1].Y < -projTri[1].W || projTri[1].Y > projTri[1].W ||
-                    projTri[1].Z < 0 || projTri[1].Z > projTri[1].W ||
-                    projTri[2].X < -projTri[2].W || projTri[2].X > projTri[2].W ||
-                    projTri[2].Y < -projTri[2].W || projTri[2].Y > projTri[2].W ||
-                    projTri[2].Z < 0 || projTri[2].Z > projTri[2].W) continue;
-
-                projTri[0] /= projTri[0].W;
-                projTri[1] /= projTri[1].W;
-                projTri[2] /= projTri[2].W;
-
-                projTri[0].X *= -1.0F; projTri[0].Y *= -1.0F;
-                projTri[1].X *= -1.0F; projTri[1].Y *= -1.0F;
-                projTri[2].X *= -1.0F; projTri[2].Y *= -1.0F;
-
-                Vector4 offsetView = new Vector4(1.0F, 1.0F, 0, 0);
-                projTri[0] += offsetView;
-                projTri[1] += offsetView;
-                projTri[2] += offsetView;
-                projTri[0].X *= 0.5f * Canvas.Width; projTri[0].Y *= 0.5f * Canvas.Height;
-                projTri[1].X *= 0.5f * Canvas.Width; projTri[1].Y *= 0.5f * Canvas.Height;
-                projTri[2].X *= 0.5f * Canvas.Width; projTri[2].Y *= 0.5f * Canvas.Height;
-
-                projMesh.Add(projTri);
+                if (!isClipped) projPolygons.Add(projPoly);
             }
 
-            if (isSolid) projMesh.Sort(Transformations.CompareTriangles);
+            if (projPolygons.Count > 0) TraverseProjection(worldData.BSPTree.Root);
+        }
+
+        private void TraverseProjection(BSPTree.Node Node)
+        {
+            var plane = worldData.Polygons.Find(p => p.ID == Node.PolyID);
+            bool isCameraInFront = Vector3.Dot(plane.normal, camera - Transformations.V4ToV3(plane.vertices[0])) > 0.0F ? true : false;
+            if (isCameraInFront)
+            {
+                if (Node.Back != null) TraverseProjection(Node.Back);
+                PaintNode(Node.PolyID);
+                if (Node.Front != null) TraverseProjection(Node.Front);
+            }
+            else
+            {
+                if (Node.Front != null) TraverseProjection(Node.Front);
+                PaintNode(Node.PolyID);
+                if (Node.Back != null) TraverseProjection(Node.Back);
+            }
+        }
+
+        private void PaintNode(int ID)
+        {
             var pen = new Pen(Color.White, 1);
             var brush = new SolidBrush(Color.Gray);
-            foreach (var projTri in projMesh)
+
+            var projPolygon = projPolygons.Find(p => p.ID == ID);
+            if (projPolygon.vertices != null)
             {
-                PointF[] projPoints =
+                var projPoints = new PointF[projPolygon.vertices.Length];
+                for (int i = 0; i < projPolygon.vertices.Length; i++)
                 {
-                   new PointF(projTri[0].X, projTri[0].Y),
-                   new PointF(projTri[1].X, projTri[1].Y),
-                   new PointF(projTri[2].X, projTri[2].Y)
-                };
+                    projPoints[i] = new PointF(projPolygon.vertices[i].X, projPolygon.vertices[i].Y);
+                }
 
                 graphics.DrawPolygon(pen, projPoints);
                 if (isSolid) graphics.FillPolygon(brush, projPoints);

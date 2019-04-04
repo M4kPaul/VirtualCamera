@@ -64,7 +64,7 @@
             this.labelRZ.Name = "labelRZ";
             this.labelRZ.Size = new System.Drawing.Size(35, 13);
             this.labelRZ.TabIndex = 5;
-            this.labelRZ.Text = "";
+            this.labelRZ.Text = "ZR: 0";
             // 
             // labelRY
             // 
@@ -75,7 +75,7 @@
             this.labelRY.Name = "labelRY";
             this.labelRY.Size = new System.Drawing.Size(35, 13);
             this.labelRY.TabIndex = 5;
-            this.labelRY.Text = "";
+            this.labelRY.Text = "YR: 0";
             // 
             // labelRX
             // 
@@ -86,7 +86,7 @@
             this.labelRX.Name = "labelRX";
             this.labelRX.Size = new System.Drawing.Size(35, 13);
             this.labelRX.TabIndex = 4;
-            this.labelRX.Text = "";
+            this.labelRX.Text = "XR: 0";
             // 
             // labelZ
             // 
@@ -97,7 +97,7 @@
             this.labelZ.Name = "labelZ";
             this.labelZ.Size = new System.Drawing.Size(35, 13);
             this.labelZ.TabIndex = 3;
-            this.labelZ.Text = "";
+            this.labelZ.Text = "Z: 0";
             // 
             // labelY
             // 
@@ -108,7 +108,7 @@
             this.labelY.Name = "labelY";
             this.labelY.Size = new System.Drawing.Size(35, 13);
             this.labelY.TabIndex = 2;
-            this.labelY.Text = "";
+            this.labelY.Text = "Y: 0";
             // 
             // labelX
             // 
@@ -119,7 +119,7 @@
             this.labelX.Name = "labelX";
             this.labelX.Size = new System.Drawing.Size(35, 13);
             this.labelX.TabIndex = 1;
-            this.labelX.Text = "";
+            this.labelX.Text = "X: 0";
             // 
             // labelFoV
             // 
