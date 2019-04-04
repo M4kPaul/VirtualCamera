@@ -20,9 +20,9 @@ namespace VirtualCamera
         private Vector3 rightDir;
         private bool isSolid;
 
-        public MainWindow()
+        public MainWindow(string filePath)
         {
-            worldData = new WorldData();
+            worldData = new WorldData(filePath);
             Reset();
 
             InitializeComponent();

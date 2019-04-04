@@ -16,9 +16,9 @@ namespace VirtualCamera
         public List<Polygon> Polygons { get; } = new List<Polygon>();
         public BSPTree BSPTree { get; }
 
-        public WorldData()
+        public WorldData(string filePath)
         {
-            using (StreamReader sr = new StreamReader(@"3dModels\world.obj"))
+            using (StreamReader sr = new StreamReader(filePath))
             {
                 int id = 0;
                 string line;

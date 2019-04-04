@@ -137,6 +137,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Location = new System.Drawing.Point(250, 100);
+            this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Controls.Add(this.Canvas);
             this.DoubleBuffered = true;
             this.Name = "MainWindow";
