@@ -5,7 +5,7 @@ namespace VirtualCamera
 {
     public class BSPTree
     {
-        enum Position { Top, Left, Bottom, Right, InFront, Behind, Intersect };
+        enum Position { InFront, Behind, Intersect };
 
         public class Node
         {
@@ -15,7 +15,7 @@ namespace VirtualCamera
 
             public Node(int polyID)
             {
-                this.PolyID = polyID;
+                PolyID = polyID;
             }
         }
 
@@ -39,8 +39,8 @@ namespace VirtualCamera
 
                 var frontPolygons = new List<Polygon>();
                 var backPolygons = new List<Polygon>();
-                var d = -(polygons[0].normal.X * polygons[0].vertices[0].X + polygons[0].normal.Y * polygons[0].vertices[0].Y + polygons[0].normal.Z * polygons[0].vertices[0].Z);
-                var plane = new Vector4(polygons[0].normal.X, polygons[0].normal.Y, polygons[0].normal.Z, d);
+                var d = -Vector3.Dot(polygons[0].normal, Transformations.V4ToV3(polygons[0].vertices[0]));
+                var plane = new Vector4(polygons[0].normal, d);
                 for (int i = 1; i < polygons.Count; i++)
                 {
                     var polyPos = CheckPosition(polygons[i], plane);
@@ -54,8 +54,7 @@ namespace VirtualCamera
                     }
                     else
                     {
-                        // Calculating planes intersection line
-                        var d2 = -(polygons[i].normal.X * polygons[i].vertices[0].X + polygons[i].normal.Y * polygons[i].vertices[0].Y + polygons[i].normal.Z * polygons[i].vertices[0].Z);
+                        var d2 = -Vector3.Dot(polygons[i].normal, Transformations.V4ToV3(polygons[i].vertices[0]));
 
                         var v = Vector3.Cross(polygons[0].normal, polygons[i].normal);
                         var dot = Vector3.Dot(v, v);
@@ -64,7 +63,6 @@ namespace VirtualCamera
                         var u2 = -d * polygons[i].normal;
                         var p = Vector3.Cross(u1 + u2, v / dot);
 
-                        // Works for convex polygons only
                         int p1pos = -1, p2pos = -1;
                         Vector3 point1 = new Vector3(), point2 = new Vector3();
                         for (int j = 0; j < polygons[i].vertices.Length; j++)
@@ -105,34 +103,29 @@ namespace VirtualCamera
                             }
                         }
 
-                        if (p1pos > 0 && p2pos > 0)
+                        var poly1 = new Polygon { ID = Polygons.Count, vertices = new Vector4[p1pos + (polygons[i].vertices.Length - p2pos) + 2], normal = polygons[i].normal };
+                        for (int j = 0, k = 0; k < p1pos; j++, k++) poly1.vertices[j] = polygons[i].vertices[k];
+                        poly1.vertices[p1pos] = new Vector4(point1, 1.0F);
+                        poly1.vertices[p1pos + 1] = new Vector4(point2, 1.0F);
+                        for (int j = p1pos + 2, k = p2pos; k < polygons[i].vertices.Length; j++, k++) poly1.vertices[j] = polygons[i].vertices[k];
+                        poly1.normal = Transformations.CalculateSurfaceNormal(poly1);
+                        Polygons.Add(poly1);
+
+                        var poly2 = new Polygon { ID = Polygons.Count, vertices = new Vector4[p2pos - p1pos + 2], normal = polygons[i].normal };
+                        poly2.vertices[0] = new Vector4(point1, 1.0F);
+                        for (int j = 1, k = p1pos; k < p2pos; j++, k++) poly2.vertices[j] = polygons[i].vertices[k];
+                        poly2.vertices[p2pos - p1pos + 1] = new Vector4(point2, 1.0F);
+                        Polygons.Add(poly2);
+
+                        if (CheckPosition(poly1, plane) == Position.InFront)
                         {
-
-                            var poly1 = new Polygon { ID = Polygons.Count, vertices = new Vector4[p1pos + (polygons[i].vertices.Length - p2pos) + 2] };
-                            for (int j = 0, k = 0; k < p1pos; j++, k++) poly1.vertices[j] = polygons[i].vertices[k];
-                            poly1.vertices[p1pos] = new Vector4(point1, 1.0F);
-                            poly1.vertices[p1pos + 1] = new Vector4(point2, 1.0F);
-                            for (int j = p1pos + 2, k = p2pos; k < polygons[i].vertices.Length; j++, k++) poly1.vertices[j] = polygons[i].vertices[k];
-                            poly1.normal = Transformations.CalculateSurfaceNormal(poly1);
-                            Polygons.Add(poly1);
-
-                            var poly2 = new Polygon { ID = Polygons.Count, vertices = new Vector4[p2pos - p1pos + 2] };
-                            poly2.vertices[0] = new Vector4(point1, 1.0F);
-                            for (int j = 1, k = p1pos; k < p2pos; j++, k++) poly2.vertices[j] = polygons[i].vertices[k];
-                            poly2.vertices[p2pos - p1pos + 1] = new Vector4(point2, 1.0F);
-                            poly2.normal = Transformations.CalculateSurfaceNormal(poly2);
-                            Polygons.Add(poly2);
-
-                            if (CheckPosition(poly1, plane) == Position.InFront)
-                            {
-                                frontPolygons.Add(poly1);
-                                backPolygons.Add(poly2);
-                            }
-                            else
-                            {
-                                frontPolygons.Add(poly2);
-                                backPolygons.Add(poly1);
-                            } 
+                            frontPolygons.Add(poly1);
+                            backPolygons.Add(poly2);
+                        }
+                        else
+                        {
+                            frontPolygons.Add(poly2);
+                            backPolygons.Add(poly1);
                         }
                     }
                 }
@@ -149,8 +142,8 @@ namespace VirtualCamera
             foreach (var vertex in poly.vertices)
             {
                 var res = Vector4.Dot(vertex, plane);
-                if (pos == 0 && res != 0) pos = res > 0 ? 1 : -1;
-                else if ((res > 0 && pos < 0) || (res < 0 && pos > 0)) return Position.Intersect;
+                if (pos == 0 && (res < -0.5F || res > 0.5F)) pos = res > 0 ? 1 : -1;
+                //else if ((res > 0.5F && pos < 0) || (res < -0.5F && pos > 0)) return Position.Intersect;
             }
 
             return pos == 1 ? Position.InFront : Position.Behind;

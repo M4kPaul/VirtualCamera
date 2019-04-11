@@ -111,7 +111,6 @@ namespace VirtualCamera
                     viewedPoly = Vector4.Transform(poly.vertices[i], viewMat);
                     projPoly.vertices[i] = Vector4.Transform(viewedPoly, projMat);
 
-                    // TODO: fix clipping
                     if (projPoly.vertices[i].X < -projPoly.vertices[i].W || projPoly.vertices[i].X > projPoly.vertices[i].W ||
                         projPoly.vertices[i].Y < -projPoly.vertices[i].W || projPoly.vertices[i].Y > projPoly.vertices[i].W ||
                         projPoly.vertices[i].Z < 0 || projPoly.vertices[i].Z > projPoly.vertices[i].W) isClipped = true;

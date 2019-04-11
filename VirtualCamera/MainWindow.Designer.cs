@@ -139,6 +139,7 @@
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Location = new System.Drawing.Point(250, 100);
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Controls.Add(this.Canvas);
             this.DoubleBuffered = true;
             this.Name = "MainWindow";
